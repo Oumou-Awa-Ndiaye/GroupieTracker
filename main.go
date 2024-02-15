@@ -8,10 +8,25 @@ import (
 )
 
 func main() {
-	a := app.New()
-	w := a.NewWindow("MUUUSIICCC")
-	w.Resize(fyne.NewSize(400, 400))
-	w.SetContent(widget.NewLabel("MUUUUSICCCC!"))
+
+	app := app.New()
+	window := app.NewWindow("MUUUSIICCC")
+	window.Resize(fyne.NewSize(700, 400))
+	window.SetContent(widget.NewLabel("MUUUUSICCCC!"))
+
+	// Create a text entry widget for the search bar
+	searchEntry := widget.NewEntry()
+	searchEntry.SetPlaceHolder("Search...")
+
+	// Create a label to display the search results
+	searchResults := widget.NewLabel("")
+
+	// Event handler for when the user types in the search bar
+	searchEntry.OnChanged = func(query string) {
+		// Here you can perform search operations based on the query
+		// For this example, we'll just display the query as the search result
+		searchResults.SetText("Search results for: " + query)
+	}
 
 	artButton := widget.NewButton("Artists", func() {
 		println("Artists button clicked")
@@ -25,13 +40,15 @@ func main() {
 		println("Locations button clicked")
 	})
 
-	w.SetContent(container.NewVBox(
+	window.SetContent(container.NewVBox(
 		widget.NewLabel("MUUUUSICCCC!"),
+		searchEntry,
+		searchResults,
 		artButton,
 		datButton,
 		locButton,
 	))
 
-	w.ShowAndRun()
+	window.ShowAndRun()
 
 }
