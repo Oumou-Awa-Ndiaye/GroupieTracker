@@ -14,14 +14,11 @@ func main() {
 	window.Resize(fyne.NewSize(700, 400))
 	window.SetContent(widget.NewLabel("MUUUUSICCCC!"))
 
-	// Create a text entry widget for the search bar
 	searchEntry := widget.NewEntry()
 	searchEntry.SetPlaceHolder("Search...")
 
-	// Create a label to display the search results
 	searchResults := widget.NewLabel("")
 
-	// Event handler for when the user types in the search bar
 	searchEntry.OnChanged = func(query string) {
 		// Here you can perform search operations based on the query
 		// For this example, we'll just display the query as the search result
