@@ -10,12 +10,12 @@ import (
 func main() {
 
 	app := app.New()
-	window := app.NewWindow("MUUUSIICCC")
+	window := app.NewWindow("Groupie Tracker App")
 	window.Resize(fyne.NewSize(700, 400))
-	window.SetContent(widget.NewLabel("MUUUUSICCCC!"))
+	window.SetContent(widget.NewLabel("Welcome to Groupie Tracker !"))
 
 	searchEntry := widget.NewEntry()
-	searchEntry.SetPlaceHolder("Search...")
+	searchEntry.SetPlaceHolder("Search for your favorit artists ...")
 
 	searchResults := widget.NewLabel("")
 
@@ -38,7 +38,7 @@ func main() {
 	})
 
 	window.SetContent(container.NewVBox(
-		widget.NewLabel("MUUUUSICCCC!"),
+		widget.NewLabel("Welcome to Groupie Tracker !"),
 		searchEntry,
 		searchResults,
 		artButton,
