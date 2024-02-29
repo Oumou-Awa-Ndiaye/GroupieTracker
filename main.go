@@ -1,15 +1,17 @@
 package main
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 )
 
 func main() {
 
-	app := app.New()
+	PerformGetRequest()
+
+	/*app := app.New()
 	window := app.NewWindow("Groupie Tracker App")
 	window.Resize(fyne.NewSize(700, 400))
 	window.SetContent(widget.NewLabel("Welcome to Groupie Tracker !"))
@@ -46,6 +48,30 @@ func main() {
 		locButton,
 	))
 
-	window.ShowAndRun()
+	window.ShowAndRun()*/
 
+}
+
+func PerformGetRequest() {
+	const myurl = "https://groupietrackers.herokuapp.com/api/artists"
+
+	response, err := http.Get(myurl)
+	if err != nil {
+		panic(err)
+	}
+
+	defer response.Body.Close()
+
+	fmt.Println("Status code : ", response.StatusCode)
+	fmt.Println("Content length is : ", response.ContentLength)
+
+	var responseString strings.Builder
+	content, _ := ioutil.ReadAll(response.Body)
+	byteCount, _ := responseString.Write(content)
+
+	fmt.Println("Bytecount is : ", byteCount)
+	fmt.Println(responseString.String())
+
+	//fmt.Println(content)
+	//fmt.Println(string(content))
 }
