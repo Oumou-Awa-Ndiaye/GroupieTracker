@@ -40,6 +40,7 @@ func Searchbar(research string, artists []Artist) []Artist {
 	}
 	return results
 }
+
 func GenerateSuggestions(research string, results []Artist) []Artist {
 	var suggestions []Artist
 	for _, artist := range results {
