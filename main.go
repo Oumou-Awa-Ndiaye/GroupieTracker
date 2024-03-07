@@ -1,21 +1,13 @@
 package main
 
 import (
-<<<<<<< HEAD
 	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-=======
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
->>>>>>> 6cbcf53ca8a7cee16bf07684eba591aa4818555f
 )
 
 type Bands struct {
@@ -35,61 +27,17 @@ type Artist struct {
 }
 
 func main() {
+	a := app.New()
+	w := a.NewWindow("MUUUSIICCC")
 
-<<<<<<< HEAD
-	searchEntry := CreateSearchBar()
-
-	w.SetContent(container.NewVBox(searchEntry, widget.NewLabel("MUUUUSICCCC!")))
-	w.ShowAndRun()
-=======
-	PerformGetRequest()
-
-	/*app := app.New()
-	window := app.NewWindow("Groupie Tracker App")
-	window.Resize(fyne.NewSize(700, 400))
-	window.SetContent(widget.NewLabel("Welcome to Groupie Tracker !"))
-
-	searchEntry := widget.NewEntry()
-	searchEntry.SetPlaceHolder("Search for your favorit artists ...")
-
-	searchResults := widget.NewLabel("")
-
-	searchEntry.OnChanged = func(query string) {
-		// Here you can perform search operations based on the query
-		// For this example, we'll just display the query as the search result
-		searchResults.SetText("Search results for: " + query)
-	}
-
-	artButton := widget.NewButton("Artists", func() {
-		println("Artists button clicked")
-	})
-
-	datButton := widget.NewButton("Dates", func() {
-		println("Dates button clicked")
-	})
-
-	locButton := widget.NewButton("Locations", func() {
-		println("Locations button clicked")
-	})
-
-	window.SetContent(container.NewVBox(
-		widget.NewLabel("Welcome to Groupie Tracker !"),
-		searchEntry,
-		searchResults,
-		artButton,
-		datButton,
-		locButton,
-	))
-
-	window.ShowAndRun()*/
->>>>>>> 6cbcf53ca8a7cee16bf07684eba591aa4818555f
-
+	// Exemple de données
 	var bands Bands
 	err := json.Unmarshal([]byte(sampleData), &bands)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Exemple d'utilisation des fonctions de filtrage
 	minCreation := 2000
 	maxCreation := 2010
 	minMembers := 3
@@ -109,7 +57,7 @@ func main() {
 	w.ShowAndRun()
 }
 
-<<<<<<< HEAD
+// Fonction pour filtrer les groupes de musique par date de création
 func filterByCreationDate(bands Bands, minCreationDate, maxCreationDate int) []Artist {
 	var filteredBands []Artist
 	for _, band := range bands.Index {
@@ -120,6 +68,7 @@ func filterByCreationDate(bands Bands, minCreationDate, maxCreationDate int) []A
 	return filteredBands
 }
 
+// Fonction pour filtrer les groupes de musique par nombre de membres
 func filterByMembersCount(bands Bands, minMembers, maxMembers int) []Artist {
 	var filteredBands []Artist
 	for _, band := range bands.Index {
@@ -131,6 +80,7 @@ func filterByMembersCount(bands Bands, minMembers, maxMembers int) []Artist {
 	return filteredBands
 }
 
+// Fonction pour filtrer les groupes de musique par lieux de concerts
 func filterByConcertLocations(bands Bands, locations []string) []Artist {
 	var filteredBands []Artist
 	for _, band := range bands.Index {
@@ -144,14 +94,7 @@ func filterByConcertLocations(bands Bands, locations []string) []Artist {
 	return filteredBands
 }
 
-func CreateSearchBar() *widget.Entry {
-	searchEntry := widget.NewEntry()
-	searchEntry.SetPlaceHolder("Recherche...")
-	return searchEntry
-}
-
 // Données JSON d'exemple
-
 const sampleData = `
 {
 	"index": [
@@ -180,28 +123,3 @@ const sampleData = `
 	]
 }
 `
-=======
-func PerformGetRequest() {
-	const myurl = "https://groupietrackers.herokuapp.com/api/artists"
-
-	response, err := http.Get(myurl)
-	if err != nil {
-		panic(err)
-	}
-
-	defer response.Body.Close()
-
-	fmt.Println("Status code : ", response.StatusCode)
-	fmt.Println("Content length is : ", response.ContentLength)
-
-	var responseString strings.Builder
-	content, _ := ioutil.ReadAll(response.Body)
-	byteCount, _ := responseString.Write(content)
-
-	fmt.Println("Bytecount is : ", byteCount)
-	fmt.Println(responseString.String())
-
-	//fmt.Println(content)
-	//fmt.Println(string(content))
-}
->>>>>>> 6cbcf53ca8a7cee16bf07684eba591aa4818555f
