@@ -1,5 +1,3 @@
-/*Partie Lisa*/
-
 package core
 
 import (
