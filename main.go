@@ -1,11 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -15,65 +11,26 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
+	"GroupieTracker/core"
 )
 
 var (
-	a   = app.New()
-	w   = a.NewWindow("Groupie Tracker")
-	api = map[string]string{
-		"artists":   "https://groupietrackers.herokuapp.com/api/artists",
-		"locations": "https://groupietrackers.herokuapp.com/api/locations",
-		"dates":     "https://groupietrackers.herokuapp.com/api/dates",
-		"relation":  "https://groupietrackers.herokuapp.com/api/relation",
-	}
-
-	artistsData []Artist
+	a           = app.New()
+	w           = a.NewWindow("Groupie Tracker")
+	artistsData []core.Artist
 )
 
-// Artist represents an artist retrieved from the API
-type Artist struct {
-	ID           int64               `json:"id"`
-	Name         string              `json:"name"`
-	Image        string              `json:"image"`
-	Members      []string            `json:"members"`
-	CreationDate int64               `json:"creationDate"`
-	FirstAlbum   string              `json:"firstAlbum"`
-	Dates        map[string][]string `json:"datesLocations"`
-}
-
 func main() {
-	apiGet()
+	artistsData = core.GetArtists() // Utilisez la fonction GetArtists pour récupérer les données des artistes
 
-	w.Resize(fyne.NewSize(800, 600))
+	w.SetFixedSize(true)
+	w.Resize(fyne.NewSize(1000, 600))
 	w.SetMainMenu(createMainMenu())
 
 	showHomePage()
 
 	w.ShowAndRun()
-}
-
-func apiGet() {
-	for key, url := range api {
-		resp, err := http.Get(url)
-		if err != nil {
-			log.Fatalf("Failed to get %s data: %v", key, err)
-		}
-		defer resp.Body.Close()
-
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatalf("Failed to read %s response body: %v", key, err)
-		}
-
-		switch key {
-		case "artists":
-			if err := json.Unmarshal(body, &artistsData); err != nil {
-				log.Fatalf("Failed to unmarshal artists data: %v", err)
-			}
-		default:
-			// Handle other API data if needed
-		}
-	}
 }
 
 func createMainMenu() *fyne.MainMenu {
@@ -87,9 +44,7 @@ func createMainMenu() *fyne.MainMenu {
 			fyne.NewMenuItem("About", func() {
 				widget.NewModalPopUp(
 					fyne.NewContainerWithLayout(layout.NewVBoxLayout(),
-						widget.NewLabel("Groupie Tracker"),
-						widget.NewLabel("Version: 1.0"),
-						widget.NewLabel("Developed by: Your Name"),
+						widget.NewLabel("Groupie Tracker  Par Ynov Paris  "),
 					),
 					w.Canvas(),
 				).Show()
@@ -99,26 +54,38 @@ func createMainMenu() *fyne.MainMenu {
 }
 
 func showHomePage() {
-	bgImage := canvas.NewImageFromFile("img.jpg")
-	bgImage.FillMode = canvas.ImageFillContain
+	searchEntry := widget.NewEntry()
+	searchEntry.SetPlaceHolder("Search for artists...")
+	searchEntry.OnChanged = func(term string) {
+		results := searchArtists(term)
+		updateArtistGrid(results)
+	}
 
-	bgContainer := fyne.NewContainerWithLayout(layout.NewMaxLayout(), bgImage)
+	artistGrid = createArtistGrid()
 
+	// Créer le contenu principal de la page
 	content := container.NewVBox(
 		createToolbar(),
-		bgContainer,
-		container.NewVBox(
-			canvas.NewText("Groupie Tracker", theme.PrimaryColor()),
-			layout.NewSpacer(),
-			createArtistGrid(),
-		),
+		canvas.NewText("Groupie Tracker", theme.PrimaryColor()),
+		layout.NewSpacer(),
+		searchEntry, // Ajout DE la barre de recherche
+		artistGrid,  // la grille des artistes
 	)
 
+	// Créer un conteneur avec défilement pour le contenu principal
 	scrollContainer := container.NewVScroll(content)
 
+	// Définir le contenu de la fenêtre
 	w.SetContent(scrollContainer)
 }
 
+func updateArtistGrid(artists []core.Artist) {
+	artistGrid.Objects = nil // Effacer la grille existante
+	for _, artist := range artists {
+		artistGrid.Add(createArtistCard(artist))
+	}
+	artistGrid.Refresh() // Rafraîchir la grille pour afficher les modifications
+}
 func createToolbar() *widget.Toolbar {
 	return widget.NewToolbar(
 		widget.NewToolbarAction(theme.HomeIcon(), func() {
@@ -127,22 +94,32 @@ func createToolbar() *widget.Toolbar {
 	)
 }
 
+var artistGrid *fyne.Container
+
 func createArtistGrid() *fyne.Container {
-	grid := container.NewGridWithColumns(3)
+	artistsData := core.GetArtists()
+
+	numColumns := 1
+
+	grid := container.NewGridWithColumns(numColumns)
+
 	for _, artist := range artistsData {
-		grid.Add(createArtistCard(artist))
+		artistLabel := widget.NewLabel(artist.Name)
+
+		grid.Add(artistLabel)
 	}
+
+	// Retourner la grille contenant les artistes
 	return grid
 }
-
-func createArtistCard(artist Artist) fyne.CanvasObject {
+func createArtistCard(artist core.Artist) fyne.CanvasObject {
 	image := canvas.NewImageFromFile(artist.Image)
 	image.FillMode = canvas.ImageFillContain
 
 	nameLabel := widget.NewLabel(artist.Name)
 	membersLabel := widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", ")))
 	firstAlbumLabel := widget.NewLabel(fmt.Sprintf("First Album: %s", artist.FirstAlbum))
-	creationDateLabel := widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.CreationDate))
+	creationDateLabel := widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation))
 
 	return container.NewVBox(
 		image,
@@ -156,14 +133,18 @@ func createArtistCard(artist Artist) fyne.CanvasObject {
 	)
 }
 
-func showArtistDetails(artist Artist) {
+func searchArtists(term string) []core.Artist {
+	return core.Searchbar(term, artistsData)
+}
+
+func showArtistDetails(artist core.Artist) {
 	widget.NewModalPopUp(
 		fyne.NewContainerWithLayout(layout.NewVBoxLayout(),
 			canvas.NewText(artist.Name, theme.PrimaryColor()),
 			canvas.NewImageFromFile(artist.Image),
 			widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", "))),
 			widget.NewLabel(fmt.Sprintf("First Album: %s", artist.FirstAlbum)),
-			widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.CreationDate)),
+			widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation)),
 		),
 		w.Canvas(),
 	).Show()
