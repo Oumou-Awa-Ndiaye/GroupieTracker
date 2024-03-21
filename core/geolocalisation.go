@@ -1,62 +1,46 @@
 package core
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
-	"net/http"
-	"net/url"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 )
 
-const apiKey = "YOUR_API_KEY"
+// Fonction pour afficher les données de géolocalisation à partir d'une API
+func ShowGeolocalisationFromAPI() {
+	// Appeler l'API pour récupérer les données de géolocalisation
+	// Code pour appeler l'API et obtenir les données de géolocalisation
 
-type GeocodeResponse struct {
-	Results []struct {
-		Geometry struct {
-			Location struct {
-				Lat float64 `json:"lat"`
-				Lng float64 `json:"lng"`
-			} `json:"location"`
-		} `json:"geometry"`
-	} `json:"results"`
-}
+	// Supposons que les données de géolocalisation soient stockées dans une liste appelée locations
+	locations := []string{"North Carolina, USA", "Georgia, USA", "Los Angeles, USA", "Saitama, Japan", "Osaka, Japan", "Nagoya, Japan", "Penrose, New Zealand", "Dunedin, New Zealand"}
 
-func main() {
-	concerts := map[string]string{
-		"Concert 1": "Berlin, Germany",
-		"Concert 2": "Paris, France",
-		"Concert 3": "New York, USA",
-	}
+	// Créer une liste pour afficher les localisations
+	locationList := widget.NewList(
+		// Fonction pour obtenir le contenu de chaque élément de la liste
+		func() int {
+			return len(locations)
+		},
+		// Fonction pour créer chaque élément de la liste
+		func() fyne.CanvasObject {
+			return widget.NewLabel("")
+		},
+		// Fonction pour mettre à jour le contenu de chaque élément de la liste
+		func(i widget.ListItemID, obj fyne.CanvasObject) {
+			obj.(*widget.Label).SetText(locations[i])
+		},
+	)
 
-	for name, address := range concerts {
-		lat, lng, err := geocodeAddress(address)
-		if err != nil {
-			log.Printf("Erreur lors de la conversion de l'adresse %s : %v", address, err)
-			continue
-		}
-		fmt.Printf("%s: Latitude %f, Longitude %f\n", name, lat, lng)
-	}
-}
+	// Créer le contenu principal de la page de géolocalisation
+	content := container.NewVBox(
+		widget.NewLabel("Locations:"),
+		locationList, // Ajouter la liste des localisations
+	)
 
-func geocodeAddress(address string) (float64, float64, error) {
-	encodedAddress := url.QueryEscape(address)
-	requestURL := fmt.Sprintf("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s", encodedAddress, apiKey)
+	// Créer une nouvelle fenêtre pour afficher les données de géolocalisation
+	geoWindow := a.NewWindow("Geolocalisation")
+	geoWindow.Resize(fyne.NewSize(400, 300))
+	geoWindow.SetContent(content)
 
-	resp, err := http.Get(requestURL)
-	if err != nil {
-		return 0, 0, err
-	}
-	defer resp.Body.Close()
-
-	var geocodeResp GeocodeResponse
-	err = json.NewDecoder(resp.Body).Decode(&geocodeResp)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	if len(geocodeResp.Results) == 0 {
-		return 0, 0, fmt.Errorf("aucun résultat trouvé pour l'adresse %s", address)
-	}
-
-	return geocodeResp.Results[0].Geometry.Location.Lat, geocodeResp.Results[0].Geometry.Location.Lng, nil
+	// Afficher la fenêtre
+	geoWindow.Show()
 }
