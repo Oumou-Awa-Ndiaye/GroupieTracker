@@ -6,8 +6,12 @@ import (
 	"net/http"
 )
 
+	parts := strings.Split(center, "-")
+    city := strings.Replace(parts[0], "_", "%20", -1)
+    country := strings.Replace(parts[1], "_", "%20", -1)
+
 func GetLocation(Artist) {
-	url := "https://api.geoapify.com/v1/geocode/search?text=38%20Upper%20Montagu%20Street%2C%20Westminster%20W1H%201LJ%2C%20United%20Kingdom&apiKey=118f1dbf888648258df3f09eb742819a"
+	url := "https://api.geoapify.com/v1/geocode/search?city=" + city + "&country=" + country + "&format=json&apiKey=118f1dbf888648258df3f09eb742819a"
 	method := "GET"
 
 	client := &http.Client{}
