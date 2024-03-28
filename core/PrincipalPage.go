@@ -12,14 +12,17 @@ import (
 	"strings"
 )
 
+// Global variables for the application and the main window.
 var (
 	a           = app.New()
 	W           = a.NewWindow("Groupie Tracker")
 	artistsData []Artist
 )
 
+// CreateMainMenu creates the main menu for the application.
 func CreateMainMenu() *fyne.MainMenu {
 	return fyne.NewMainMenu(
+		//File for a Quit option
 		fyne.NewMenu("File",
 			fyne.NewMenuItem("Quit", func() {
 				a.Quit()
@@ -38,28 +41,70 @@ func CreateMainMenu() *fyne.MainMenu {
 	)
 }
 
+// ShowHomePage setups and displays the home page of the application.
 func ShowHomePage() {
 	searchEntry := widget.NewEntry()
-	searchEntry.SetPlaceHolder("Search for artists...")
+	searchEntry.SetPlaceHolder("Rechercher ...")
+	var suggestionsPopup *widget.PopUp // A popup for showing search suggestions.
+
 	searchEntry.OnChanged = func(term string) {
-		results := Searchbar(term, artistsData)
-		updateArtistGrid(results)
+		// Hide existing popup if the search term is empty or update it with new suggestions.
+		if suggestionsPopup != nil {
+			suggestionsPopup.Hide()
+		}
+
+		if term == "" {
+			return
+		}
+
+		suggestions := generateSuggestions(term, artistsData)
+		if len(suggestions) == 0 {
+			return
+		}
+
+		// List to display suggestions.
+		list := widget.NewList(
+			func() int {
+				return len(suggestions)
+			},
+			func() fyne.CanvasObject {
+				return widget.NewLabel("")
+			},
+			func(i widget.ListItemID, o fyne.CanvasObject) {
+				o.(*widget.Label).SetText(suggestions[i].Name)
+			},
+		)
+		// When a suggestion is selected, set the search entry's text to it and hide the popup.
+		list.OnSelected = func(i widget.ListItemID) {
+			selectedArtist := suggestions[i]
+			showArtistDetails(selectedArtist)
+			searchEntry.SetText(suggestions[i].Name)
+			if suggestionsPopup != nil {
+				suggestionsPopup.Hide()
+			}
+		}
+
+		// Show suggestions in a popup just below the search entry.
+		suggestionsPopup = widget.NewPopUp(list, W.Canvas())
+		suggestionsPopup.Show()
+
+		entryPos := fyne.CurrentApp().Driver().AbsolutePositionForObject(searchEntry)
+		suggestionsPopup.Move(fyne.NewPos(entryPos.X, entryPos.Y+searchEntry.Size().Height))
+		suggestionsPopup.Resize(fyne.NewSize(searchEntry.Size().Width, list.MinSize().Height))
 	}
-	artistGrid = createArtistGrid()
+
 	artistsData = GetArtists()
-	// Créer le contenu principal de la page
+	artistGrid := createArtistGrid()
+	// Setup the main content of the homepage.
 	content := container.NewVBox(
 		createToolbar(),
 		canvas.NewText("Groupie Tracker", theme.PrimaryColor()),
 		layout.NewSpacer(),
-		searchEntry, // Ajout DE la barre de recherche
-		artistGrid,  // la grille des artistes
+		searchEntry,
+		artistGrid,
 	)
 
-	// Créer un conteneur avec défilement pour le contenu principal
 	scrollContainer := container.NewVScroll(content)
-
-	// Définir le contenu de la fenêtre
 	W.SetContent(scrollContainer)
 }
 
@@ -97,30 +142,6 @@ func createArtistGrid() *fyne.Container {
 	// Retourner la grille contenant les artistes
 	return grid
 }
-func createArtistCard(artist Artist) fyne.CanvasObject {
-	image := canvas.NewImageFromFile(artist.Image)
-	image.FillMode = canvas.ImageFillContain
-
-	nameLabel := widget.NewLabel(artist.Name)
-	membersLabel := widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", ")))
-	firstAlbumLabel := widget.NewLabel(fmt.Sprintf("First Album: %s", artist.FirstAlbum))
-	creationDateLabel := widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation))
-
-	return container.NewVBox(
-		image,
-		nameLabel,
-		membersLabel,
-		firstAlbumLabel,
-		creationDateLabel,
-		widget.NewButton("View Details", func() {
-			showArtistDetails(artist)
-		}),
-	)
-}
-
-func searchArtists(term string) []Artist {
-	return Searchbar(term, artistsData)
-}
 
 func showArtistDetails(artist Artist) {
 	widget.NewModalPopUp(
@@ -133,4 +154,39 @@ func showArtistDetails(artist Artist) {
 		),
 		W.Canvas(),
 	).Show()
+}
+func createArtistCard(artist Artist) fyne.CanvasObject {
+	// Créer un label avec le nom de l'artiste
+	nameLabel := widget.NewLabel(artist.Name)
+
+	// Créer un label avec les membres de l'artiste
+	membersLabel := widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", ")))
+
+	// Créer un label avec le premier album de l'artiste
+	firstAlbumLabel := widget.NewLabel(fmt.Sprintf("First Album: %s", artist.FirstAlbum))
+
+	// Créer un label avec la date de création de l'artiste
+	creationDateLabel := widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation))
+
+	image := canvas.NewImageFromFile(artist.Image)
+
+	// Créer une carte d'artiste contenant les labels et l'image
+	artistCard := container.NewVBox(
+		nameLabel,
+		image,
+		membersLabel,
+		firstAlbumLabel,
+		creationDateLabel,
+		widget.NewButton("View Details", func() {
+			showArtistDetails(artist)
+		}),
+	)
+
+	return artistCard
+}
+func showArtistImage(artist Artist) {
+	image := getImageFromURL(artist.Image)
+	window := a.NewWindow(fmt.Sprintf("Image de %s", artist.Name))
+	window.SetContent(image)
+	window.Show()
 }
