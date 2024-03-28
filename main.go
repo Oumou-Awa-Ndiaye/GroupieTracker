@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fyne.io/fyne/v2"
-
 	"GroupieTracker/core"
+	"fyne.io/fyne/v2"
 )
 
 func main() {
