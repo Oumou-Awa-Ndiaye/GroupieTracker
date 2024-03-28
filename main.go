@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fyne.io/fyne/v2"
+    "fyne.io/fyne/v2"
 
-	"GroupieTracker/core"
+    "GroupieTracker/core"
 )
 
 func main() {
-	core.W.Resize(fyne.NewSize(1000, 600))
-	core.W.SetMainMenu(core.CreateMainMenu())
+    core.W.Resize(fyne.NewSize(1000, 600))
+    core.W.SetMainMenu(core.CreateMainMenu())
 
-	core.ShowHomePage()
+    core.ShowHomePage()
 
-	core.W.ShowAndRun()
+    core.W.ShowAndRun()
 }

@@ -15,6 +15,7 @@ type Artist struct {
 	FirstAlbum   string   `json:"firstAlbum"`
 	Locations    string   `json:"locations"`
 	DatesConcert string   `json:"concertDates"`
+	ConcertLocation string `json:"locations"`
 }
 
 // Structure de données représentant des lieux de concert
@@ -78,3 +79,4 @@ func GetRelations() []Relation {
 	json.NewDecoder(resp.Body).Decode(&relations)
 	return relations
 }
+

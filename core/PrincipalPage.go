@@ -134,3 +134,4 @@ func showArtistDetails(artist Artist) {
 		W.Canvas(),
 	).Show()
 }
+
