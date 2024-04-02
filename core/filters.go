@@ -20,24 +20,17 @@ func FilterArtistsByFirstAlbum(year int, artists []Artist) []Artist {
 	return filteredArtists
 }
 
-// FilterArtistsByMembersCount filtre les artistes par nombre de membres
-func FilterArtistsByMembersCount(count int, artists []Artist) []Artist {
+
+//Filtre par membres
+func filterArtistsByMember(members string, artists []Artist) []Artist {
 	filteredArtists := make([]Artist, 0)
 	for _, artist := range artists {
-		if len(artist.Members) == count {
-			filteredArtists = append(filteredArtists, artist)
+		for _, member := range artist.Members {
+			if strings.Contains(strings.ToLower(member), strings.ToLower(members)) {
+				filteredArtists = append(filteredArtists, artist)
+				break
+			}
 		}
 	}
 	return filteredArtists
 }
-
-// FilterArtistsByConcertLocation filtre les artistes par lieu de concerts
-//func FilterArtistsByConcertLocation(location string, artists []Artist) []Artist {
-	//filteredArtists := make([]Artist, 0)
-	//for _, artist := range artists {
-		//if strings.Contains(strings.ToLower(artist.ConcertLocation), strings.ToLower(location)) {
-		//	filteredArtists = append(filteredArtists, artist)
-	//	}
-	//}
-	//return filteredArtists
-//}
