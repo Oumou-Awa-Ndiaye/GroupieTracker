@@ -41,6 +41,7 @@ func ShowGeolocalisationFromAPI() {
 	geoWindow.Resize(fyne.NewSize(400, 300))
 	geoWindow.SetContent(content)
 
-	// Afficher la fenêtre
+	// Afficher la fenêtre0
+
 	geoWindow.Show()
 }

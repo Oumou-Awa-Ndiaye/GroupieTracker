@@ -79,4 +79,3 @@ func GetRelations() []Relation {
 	json.NewDecoder(resp.Body).Decode(&relations)
 	return relations
 }
-

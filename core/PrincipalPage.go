@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -9,7 +11,6 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"strings"
 )
 
 var (
@@ -39,18 +40,28 @@ func CreateMainMenu() *fyne.MainMenu {
 }
 
 func ShowHomePage() {
+	W := a.NewWindow("Groupie Trackers")
+
 	searchEntry := widget.NewEntry()
 	searchEntry.SetPlaceHolder("Search for artists...")
 	searchEntry.OnChanged = func(term string) {
 		results := Searchbar(term, artistsData)
 		updateArtistGrid(results)
 	}
+	
+	//Ajouter par Awa
+	filterButton := widget.NewButton("Recherche avec Filtre", func() {
+		FilterPage()
+		W.Close()
+	})
+
 	artistGrid = createArtistGrid()
 	artistsData = GetArtists()
+
 	// Créer le contenu principal de la page
 	content := container.NewVBox(
 		createToolbar(),
-		canvas.NewText("Groupie Tracker", theme.PrimaryColor()),
+		filterButton,
 		layout.NewSpacer(),
 		searchEntry, // Ajout DE la barre de recherche
 		artistGrid,  // la grille des artistes
@@ -59,8 +70,10 @@ func ShowHomePage() {
 	// Créer un conteneur avec défilement pour le contenu principal
 	scrollContainer := container.NewVScroll(content)
 
-	// Définir le contenu de la fenêtre
 	W.SetContent(scrollContainer)
+	W.CenterOnScreen()
+	W.Resize(fyne.NewSize(1000, 600))
+	W.Show()
 }
 
 func updateArtistGrid(artists []Artist) {
@@ -98,8 +111,8 @@ func createArtistGrid() *fyne.Container {
 	return grid
 }
 func createArtistCard(artist Artist) fyne.CanvasObject {
-	image := canvas.NewImageFromFile(artist.Image)
-	image.FillMode = canvas.ImageFillContain
+	// image := canvas.NewImageFromFile(artist.Image)
+	// image.FillMode = canvas.ImageFillContain
 
 	nameLabel := widget.NewLabel(artist.Name)
 	membersLabel := widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", ")))
@@ -107,7 +120,7 @@ func createArtistCard(artist Artist) fyne.CanvasObject {
 	creationDateLabel := widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation))
 
 	return container.NewVBox(
-		image,
+		// image,
 		nameLabel,
 		membersLabel,
 		firstAlbumLabel,
@@ -126,7 +139,7 @@ func showArtistDetails(artist Artist) {
 	widget.NewModalPopUp(
 		fyne.NewContainerWithLayout(layout.NewVBoxLayout(),
 			canvas.NewText(artist.Name, theme.PrimaryColor()),
-			canvas.NewImageFromFile(artist.Image),
+			// canvas.NewImageFromFile(artist.Image),
 			widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", "))),
 			widget.NewLabel(fmt.Sprintf("First Album: %s", artist.FirstAlbum)),
 			widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation)),
@@ -134,4 +147,3 @@ func showArtistDetails(artist Artist) {
 		W.Canvas(),
 	).Show()
 }
-
