@@ -23,7 +23,7 @@ func FilterArtistsByFirstAlbum(year int, artists []Artist) []Artist {
 
 
 //Filtre par membres
-/*func filterArtistsByMember(members string, artists []Artist) []Artist {
+func filterArtistsByMember(members string, artists []Artist) []Artist {
 	filteredArtists := make([]Artist, 0)
 	for _, artist := range artists {
 		for _, member := range artist.Members {
@@ -34,7 +34,7 @@ func FilterArtistsByFirstAlbum(year int, artists []Artist) []Artist {
 		}
 	}
 	return filteredArtists
-}*/
+}
 
 // Fonction pour filtrer les artistes en fonction du nombre de membres sélectionnés
 func filterArtistsByNumMembers(numMembers int, artists []Artist, membersChecks []*widget.Check) []Artist {
@@ -46,3 +46,4 @@ func filterArtistsByNumMembers(numMembers int, artists []Artist, membersChecks [
     }
     return filteredArtists
 }
+
