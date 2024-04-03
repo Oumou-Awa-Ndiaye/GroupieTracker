@@ -35,6 +35,7 @@ type LocationData struct {
 	Longitude string `json:"lon"`
 }
 
+// Concertlocation takes a string in the format city-country and returns a Map centered at that location
 func Concertlocation(center string, zoom int) *Map {
 	location := strings.Split(center, "-")
 	city := strings.Replace(location[0], "_", "%20", -1)
@@ -63,6 +64,7 @@ func Concertlocation(center string, zoom int) *Map {
 	}
 }
 
+// GetImg retrieves an image of the map with current settings
 func (m *Map) GetImg() image.Image {
 	res, err := http.Get(m.GetURL())
 	if err != nil {
@@ -80,6 +82,7 @@ func (m *Map) GetImg() image.Image {
 	return img
 }
 
+// GetURL generates the URL for the static map request
 func (m *Map) GetURL() string {
 	const (
 		baseURL = "https://maps.geoapify.com/v1/staticmap?style=osm-bright-smooth"
@@ -108,10 +111,12 @@ func (m *Map) GetURL() string {
 	return url
 }
 
+// AddMarker adds a new marker to the map
 func (m *Map) AddMarker(lat float32, long float32, color string, icon string) {
 	m.markers = append(m.markers, Marker{lat, long, color, icon})
 }
 
+// Getcoordinate fetches coordinate data for a given location
 func (m *Map) Getcoordinate(location string) Locations {
 	var coordinate Locations
 	resData, err := http.Get("https://api.geoapify.com/v1/geocode/search?text=" + location + "&format=json&")

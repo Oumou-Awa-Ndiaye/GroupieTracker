@@ -4,7 +4,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// FilterArtistsByCreationDate filtre les artistes par date de premier album
+// FilterArtistsByCreationDate filters artists by the date of their first album
 func FilterArtistsByCreationDate(startyear, endyear int, artists []Artist) []Artist {
 	filteredArtists := make([]Artist, 0)
 	for _, artist := range artists {
@@ -16,7 +16,7 @@ func FilterArtistsByCreationDate(startyear, endyear int, artists []Artist) []Art
 	return filteredArtists
 }
 
-// Fonction pour filtrer les artistes en fonction du nombre de membres sélectionnés
+// Function to filter artists based on the number of selected members
 func filterArtistsByNumMembers(artists []Artist, membersChecks []*widget.Check) []Artist {
 	filteredArtists := make([]Artist, 0)
 	checkedNumbers := getCheckedNumbers(membersChecks...)
@@ -25,7 +25,7 @@ func filterArtistsByNumMembers(artists []Artist, membersChecks []*widget.Check) 
 		for _, nbr := range checkedNumbers {
 			if len(artist.Members) == nbr {
 				filteredArtists = append(filteredArtists, artist)
-				// Pas besoin de continuer la boucle intérieure une fois qu'un match est trouvé
+				// No need to continue the inner loop once a match is found
 				break
 			}
 		}
@@ -37,7 +37,7 @@ func getCheckedNumbers(checks ...*widget.Check) []int {
 	var checkedNumbers []int
 	for i, check := range checks {
 		if check.Checked {
-			checkedNumbers = append(checkedNumbers, i+1) // Ajouter 1 car les nombres de membres commencent à partir de 1
+			checkedNumbers = append(checkedNumbers, i+1) // Add 1 since member numbers start from 1
 		}
 	}
 	return checkedNumbers

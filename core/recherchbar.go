@@ -5,10 +5,11 @@ import (
 	"strings"
 )
 
+// Searchbar searches through artists based on the query and returns matching artists.
 func Searchbar(query string, artistsData []Artist) []Artist {
 	searchArtists := make([]Artist, 0)
 	for _, artist := range artistsData {
-		// Vérifiez si le terme de recherche correspond au nom de l'artiste, aux membres, à la date de création ou à la date du premier album
+		// Check if the search term matches the artist's name, members, creation date, or first album date
 		if strings.Contains(strings.ToLower(artist.Name), strings.ToLower(query)) ||
 			containsMember(artist.Members, query) ||
 			strconv.Itoa(artist.DateCreation) == query ||
@@ -19,8 +20,7 @@ func Searchbar(query string, artistsData []Artist) []Artist {
 	return searchArtists
 }
 
-
-// Fonction utilitaire pour vérifier si les membres de l'artiste contiennent le terme de recherche
+// Utility function to check if the artist's members contain the search term
 func containsMember(members []string, query string) bool {
 	for _, member := range members {
 		if strings.Contains(strings.ToLower(member), strings.ToLower(query)) {
@@ -30,7 +30,7 @@ func containsMember(members []string, query string) bool {
 	return false
 }
 
-// Fonction pour générer des suggestions en fonction du terme de recherche
+// Function to generate suggestions based on the search term
 func generateSuggestions(query string, artistsData []Artist) []Artist {
 	suggestions := make([]Artist, 0)
 	for _, artist := range Searchbar(query, artistsData) {
@@ -40,4 +40,3 @@ func generateSuggestions(query string, artistsData []Artist) []Artist {
 	}
 	return suggestions
 }
-

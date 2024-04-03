@@ -13,14 +13,14 @@ import (
 func FilterPage(A fyne.App) {
 	W := A.NewWindow("Groupie Trackers")
 
-	// Fonction pour mettre à jour le Label avec l'année correspondant à la valeur du slider
+	// Function to update the Label with the year corresponding to the slider's value
 	updateLabelYear := func(label *widget.Label, value float64) {
 		year := int(value)
 		label.SetText(strconv.Itoa(year))
 	}
 	artistGrid = createArtistGrid(W)
 
-	// Créer des Labels pour afficher les années
+	// Create Labels to display the years
 	labelCreationDateStart := widget.NewLabel("1958")
 	labelCreationDateEnd := widget.NewLabel("2015")
 
@@ -30,7 +30,7 @@ func FilterPage(A fyne.App) {
 	sliderCreationDateStart.SetValue(1958)
 	sliderCreationDateEnd.SetValue(2015)
 
-	// Mettre à jour les Labels à chaque fois que la valeur des sliders change
+	// Update the Labels whenever the slider values change
 	sliderCreationDateStart.OnChanged = func(value float64) {
 		updateLabelYear(labelCreationDateStart, value)
 	}
@@ -41,7 +41,7 @@ func FilterPage(A fyne.App) {
 
 	startDateRange := container.NewVBox(
 		container.NewHBox(
-			widget.NewLabel("Date de Début :"),
+			widget.NewLabel("Start Date:"),
 			labelCreationDateStart,
 			labelCreationDateEnd,
 		),
@@ -52,26 +52,26 @@ func FilterPage(A fyne.App) {
 		container.NewHBox(),
 	)
 
-	// Déclaration d'une slice de widgets Check
+	// Declaration of a slice of Check widgets
 	var membersChecks []*widget.Check
 
-	// Boucle pour créer et initialiser les cases à cocher
+	// Loop to create and initialize the checkboxes
 	for i := 1; i <= 7; i++ {
 		memberCheck := widget.NewCheck(strconv.Itoa(i), func(checked bool) {})
-		memberCheck.SetChecked(false) // Initialiser à false pour qu'elles ne soient pas cochées par défaut
+		memberCheck.SetChecked(false) // Initialize as false so they are not checked by default
 		membersChecks = append(membersChecks, memberCheck)
 	}
 
-	// Convertir membersChecks en []fyne.CanvasObject
+	// Convert membersChecks into []fyne.CanvasObject
 	var canvasObjects []fyne.CanvasObject
 	for _, check := range membersChecks {
 		canvasObjects = append(canvasObjects, check)
 	}
 
-	// Création du VBox pour les membres
+	// Creation of the VBox for members
 	numMembers := container.NewVBox(
-		widget.NewLabel("Nombre de Membres :"),
-		container.NewHBox(canvasObjects...), // Utilisation de l'opérateur spread pour ajouter tous les éléments de la slice
+		widget.NewLabel("Number of Members:"),
+		container.NewHBox(canvasObjects...), // Use of the spread operator to add all elements of the slice
 	)
 
 	applyButton := widget.NewButton("Apply Filters", func() {
