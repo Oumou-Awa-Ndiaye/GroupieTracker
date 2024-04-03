@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -9,13 +11,12 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"strings"
 )
 
 // Global variables for the application and the main window.
 var (
-	a                    = app.New()
-	W                    = a.NewWindow("Groupie Tracker")
+	A                    = app.New()
+	W                    = A.NewWindow("Groupie Tracker")
 	artistsData          []Artist
 	artistGrid           *fyne.Container
 	suggestionsContainer *widget.PopUp //conteneur pour les suggestions qui sera ajouté sous la barre de recherche
@@ -27,7 +28,7 @@ func CreateMainMenu() *fyne.MainMenu {
 		//File for a Quit option
 		fyne.NewMenu("File",
 			fyne.NewMenuItem("Quit", func() {
-				a.Quit()
+				A.Quit()
 			}),
 		),
 		fyne.NewMenu("Help",
@@ -43,8 +44,9 @@ func CreateMainMenu() *fyne.MainMenu {
 	)
 }
 
-func ShowHomePage() {
+func ShowHomePage(A fyne.App) {
 	// Initialize search bar with a specific size
+	W := A.NewWindow("Groupie Tracker")
 	searchEntry := widget.NewEntry()
 	searchEntry.SetPlaceHolder("Chercher vos artistes ...")
 
@@ -58,8 +60,8 @@ func ShowHomePage() {
 	// Initialize filter button
 
 	filterButton := widget.NewButton("Recherche avec Filtre", func() {
-		FilterPage()
-		W.Close()
+		FilterPage(A)
+		W.Hide()
 	})
 
 	// Container for the search bar without unnecessary spacing
@@ -95,10 +97,13 @@ func ShowHomePage() {
 	mainContent := container.NewVBox(searchContainer, artistGrid)
 
 	// Create the main navigation toolbar
-	toolbar := createToolbar()
+	homeButton := widget.NewButtonWithIcon("", theme.HomeIcon(), func() {
+		ShowHomePage(A)
+		W.Hide()
+	})
 
 	// Set up the main content of the home page
-	content := container.NewBorder(toolbar, nil, nil, nil, mainContent)
+	content := container.NewBorder(container.NewHBox(homeButton, layout.NewSpacer()), nil, nil, nil, mainContent)
 
 	// Add a scroll bar if necessary
 	scrollContainer := container.NewVScroll(content)
@@ -150,6 +155,11 @@ func ShowHomePage() {
 		// Display the suggestions list in a popup
 		//showSuggestionsPopup(suggestionsList, searchEntry)
 	}
+	W.SetOnClosed(func() {
+		A.Quit()
+	})
+	W.CenterOnScreen()
+	W.Resize(fyne.NewSize(1000, 600))
 	W.Show()
 }
 
@@ -160,16 +170,6 @@ func updateArtistGrid(artists []Artist) {
 		artistGrid.Add(createArtistCard(artist))
 	}
 	artistGrid.Refresh() //Refresh the grid with update artistes
-}
-
-// createToolbar generates a toolbar for navigation within the app.
-func createToolbar() *widget.Toolbar {
-	// Returns a toolbar widget with predefined actions, e.g., returning to home page.
-	return widget.NewToolbar(
-		widget.NewToolbarAction(theme.HomeIcon(), func() {
-			ShowHomePage()
-		}),
-	)
 }
 
 // createArtistGrid initializes and returns a grid layout containing artist cards.
@@ -213,7 +213,6 @@ func createArtistCard(artist Artist) fyne.CanvasObject {
 		showArtistDetails(artist)
 	})
 	artistCard := container.NewVBox(
-		nameLabel,
 		image,
 		viewDetailsButton,
 	)
