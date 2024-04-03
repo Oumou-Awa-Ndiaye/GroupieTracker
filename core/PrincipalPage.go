@@ -14,10 +14,11 @@ import (
 
 // Global variables for the application and the main window.
 var (
-	a           = app.New()
-	W           = a.NewWindow("Groupie Tracker")
-	artistsData []Artist
-	artistGrid  *fyne.Container
+	a                    = app.New()
+	W                    = a.NewWindow("Groupie Tracker")
+	artistsData          []Artist
+	artistGrid           *fyne.Container
+	suggestionsContainer *widget.PopUp //conteneur pour les suggestions qui sera ajouté sous la barre de recherche
 )
 
 // CreateMainMenu creates the main menu for the application.
@@ -45,7 +46,7 @@ func CreateMainMenu() *fyne.MainMenu {
 func ShowHomePage() {
 	// Initialize search bar with a specific size
 	searchEntry := widget.NewEntry()
-	searchEntry.SetPlaceHolder("Search...")
+	searchEntry.SetPlaceHolder("Chercher vos artistes ...")
 
 	// Initialize search button
 	searchButton := widget.NewButton("Search", func() {
@@ -55,12 +56,11 @@ func ShowHomePage() {
 	})
 
 	// Initialize filter button
-	
+
 	filterButton := widget.NewButton("Recherche avec Filtre", func() {
 		FilterPage()
 		W.Close()
 	})
-
 
 	// Container for the search bar without unnecessary spacing
 	searchContainer := container.New(layout.NewHBoxLayout(),
@@ -79,7 +79,16 @@ func ShowHomePage() {
 		),
 		layout.NewSpacer(),
 	)
-
+	suggestionsBox := container.NewVBox()
+	// Fonction pour montrer ou cacher les suggestions
+	showSuggestions := func(show bool) {
+		if suggestionsContainer != nil {
+			suggestionsContainer.Hide()
+			if show {
+				suggestionsContainer.Show()
+			}
+		}
+	}
 	// Create the artist grid and set up the home page content
 	artistsData = GetArtists()
 	artistGrid = createArtistGrid()
@@ -98,34 +107,51 @@ func ShowHomePage() {
 	// Manage suggestions for the search bar
 	searchEntry.OnChanged = func(input string) {
 		if input == "" {
-			return // Do nothing if the search bar is empty
+			showSuggestions(false)
+			return
 		}
 
 		// Generate suggestions based on input
 		suggestions := generateSuggestions(input, artistsData)
+		suggestionsBox.RemoveAll()
 
 		if len(suggestions) > 0 {
 			// Create the suggestions list
-			suggestionsList := widget.NewList(
-				func() int { return len(suggestions) },
-				func() fyne.CanvasObject { return widget.NewLabel("") },
-				func(id widget.ListItemID, object fyne.CanvasObject) {
-					object.(*widget.Label).SetText(suggestions[id].Name)
-				},
-			)
+			for _, suggestion := range suggestions {
 
-			suggestionsList.OnSelected = func(id widget.ListItemID) {
-				searchEntry.SetText(suggestions[id].Name)
+				name := suggestion.Name
+				suggestionButton := widget.NewButton(name, func() {
+					searchEntry.SetText(name)                      // Sets the search bar text
+					searchEntry.Refresh()                          // Refreshes the search bar to display the updated text
+					showSuggestions(false)                         // Hides the suggestions
+					updateArtistGrid(Searchbar(name, artistsData)) // Updates the grid with the search results
+				})
+
+				suggestionButton.Importance = widget.LowImportance
+				suggestionButton.Resize(suggestionButton.MinSize())
+				suggestionButton.Alignment = widget.ButtonAlignLeading // Alignement à gauche
+
+				suggestionsBox.Add(suggestionButton)
 			}
 
-			// Display the suggestions list in a popup
-			showSuggestionsPopup(suggestionsList, searchEntry)
+			if suggestionsContainer == nil {
+				suggestionsContainer = widget.NewPopUp(suggestionsBox, W.Canvas())
+			} else {
+				suggestionsContainer.Content = suggestionsBox
+				suggestionsContainer.Refresh()
+			}
+			suggestionsContainer.Move(fyne.NewPos(searchEntry.Position().X, searchEntry.Position().Y+searchEntry.Size().Height))
+			suggestionsContainer.Resize(fyne.NewSize(searchEntry.Size().Width, suggestionsBox.MinSize().Height))
+			showSuggestions(true)
+		} else {
+			showSuggestions(false)
 		}
-	}
 
+		// Display the suggestions list in a popup
+		//showSuggestionsPopup(suggestionsList, searchEntry)
+	}
 	W.Show()
 }
-
 
 // updateArtistGrid refreshes the artist grid with new data.
 func updateArtistGrid(artists []Artist) {
@@ -166,9 +192,9 @@ func showArtistDetails(artist Artist) {
 		fyne.NewContainerWithLayout(layout.NewVBoxLayout(),
 
 			canvas.NewText(artist.Name, theme.PrimaryColor()),
-			widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", "))),
-			widget.NewLabel(fmt.Sprintf("First Album: %s", artist.FirstAlbum)),
-			widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation)),
+			widget.NewLabel(fmt.Sprintf("Listes des members: %s", strings.Join(artist.Members, ", "))),
+			widget.NewLabel(fmt.Sprintf("Date de publication du premier Album: %s", artist.FirstAlbum)),
+			widget.NewLabel(fmt.Sprintf("Date de creation : %d", artist.DateCreation)),
 			image,
 		),
 		W.Canvas(),
@@ -196,7 +222,7 @@ func createArtistCard(artist Artist) fyne.CanvasObject {
 	return artistCard
 }
 
-func showSuggestionsPopup(suggestionsList *widget.List, entry *widget.Entry) {
+/*func showSuggestionsPopup(suggestionsList *widget.List, entry *widget.Entry) {
     popup := widget.NewModalPopUp(suggestionsList, W.Canvas())
     popup.Show()
-}
+}*/
