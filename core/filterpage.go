@@ -18,24 +18,36 @@ func FilterPage(A fyne.App) {
 		year := int(value)
 		label.SetText(strconv.Itoa(year))
 	}
+	artistGrid = createArtistGrid(W)
 
 	// Créer des Labels pour afficher les années
-	labelStartDate := widget.NewLabel("1986")
-	sliderStartDate := widget.NewSlider(1958, 2015) // 1958 for Bee Gees and 2015 for Juice Wrld
-	sliderStartDate.SetValue(1958)
+	labelCreationDateStart := widget.NewLabel("1958")
+	labelCreationDateEnd := widget.NewLabel("2015")
+
+	sliderCreationDateStart := widget.NewSlider(1958, 2015) // 1958 for Bee Gees and 2015 for Juice Wrld
+	sliderCreationDateEnd := widget.NewSlider(1958, 2015)   // 1958 for Bee Gees and 2015 for Juice Wrld
+
+	sliderCreationDateStart.SetValue(1958)
+	sliderCreationDateEnd.SetValue(2015)
 
 	// Mettre à jour les Labels à chaque fois que la valeur des sliders change
-	sliderStartDate.OnChanged = func(value float64) {
-		updateLabelYear(labelStartDate, value)
+	sliderCreationDateStart.OnChanged = func(value float64) {
+		updateLabelYear(labelCreationDateStart, value)
+	}
+
+	sliderCreationDateEnd.OnChanged = func(value float64) {
+		updateLabelYear(labelCreationDateEnd, value)
 	}
 
 	startDateRange := container.NewVBox(
 		container.NewHBox(
 			widget.NewLabel("Date de Début :"),
-			labelStartDate,
+			labelCreationDateStart,
+			labelCreationDateEnd,
 		),
 		container.NewVBox(
-			sliderStartDate,
+			sliderCreationDateStart,
+			sliderCreationDateEnd,
 		),
 		container.NewHBox(),
 	)
@@ -62,6 +74,15 @@ func FilterPage(A fyne.App) {
 		container.NewHBox(canvasObjects...), // Utilisation de l'opérateur spread pour ajouter tous les éléments de la slice
 	)
 
+	applyButton := widget.NewButton("Apply Filters", func() {
+		artists := GetArtists()
+		artists = FilterArtistsByCreationDate(int(sliderCreationDateStart.Value), int(sliderCreationDateEnd.Value), artists)
+		artists = filterArtistsByNumMembers(artists, membersChecks)
+		// fmt.Println(artists)
+		updateArtistGrid(artists, W)
+
+	})
+
 	homeButton := widget.NewButtonWithIcon("", theme.HomeIcon(), func() {
 		ShowHomePage(A)
 		W.Hide()
@@ -74,13 +95,15 @@ func FilterPage(A fyne.App) {
 		),
 		startDateRange,
 		numMembers,
+		applyButton,
 	)
+	scrollContainer := container.NewVScroll(artistGrid)
 
 	W.SetOnClosed(func() {
 		A.Quit()
 	})
 
-	W.SetContent(container.NewBorder(content, nil, nil, nil))
+	W.SetContent(container.NewBorder(content, nil, nil, nil, scrollContainer))
 	W.CenterOnScreen()
 	W.Resize(fyne.NewSize(1000, 600))
 	W.Show()

@@ -54,7 +54,7 @@ func ShowHomePage(A fyne.App) {
 	searchButton := widget.NewButton("Search", func() {
 		searchTerm := searchEntry.Text
 		results := Searchbar(searchTerm, artistsData)
-		updateArtistGrid(results) // Update the artist grid with found artists
+		updateArtistGrid(results, W) // Update the artist grid with found artists
 	})
 
 	// Initialize filter button
@@ -93,7 +93,7 @@ func ShowHomePage(A fyne.App) {
 	}
 	// Create the artist grid and set up the home page content
 	artistsData = GetArtists()
-	artistGrid = createArtistGrid()
+	artistGrid = createArtistGrid(W)
 	mainContent := container.NewVBox(searchContainer, artistGrid)
 
 	// Create the main navigation toolbar
@@ -126,10 +126,10 @@ func ShowHomePage(A fyne.App) {
 
 				name := suggestion.Name
 				suggestionButton := widget.NewButton(name, func() {
-					searchEntry.SetText(name)                      // Sets the search bar text
-					searchEntry.Refresh()                          // Refreshes the search bar to display the updated text
-					showSuggestions(false)                         // Hides the suggestions
-					updateArtistGrid(Searchbar(name, artistsData)) // Updates the grid with the search results
+					searchEntry.SetText(name)                         // Sets the search bar text
+					searchEntry.Refresh()                             // Refreshes the search bar to display the updated text
+					showSuggestions(false)                            // Hides the suggestions
+					updateArtistGrid(Searchbar(name, artistsData), W) // Updates the grid with the search results
 				})
 
 				suggestionButton.Importance = widget.LowImportance
@@ -145,6 +145,7 @@ func ShowHomePage(A fyne.App) {
 				suggestionsContainer.Content = suggestionsBox
 				suggestionsContainer.Refresh()
 			}
+			// suggestionsContainer.Move(fyne.NewPos(searchEntry.Position().X, searchEntry.Position().Y-suggestionsBox.MinSize().Height))
 			suggestionsContainer.Move(fyne.NewPos(searchEntry.Position().X, searchEntry.Position().Y+searchEntry.Size().Height))
 			suggestionsContainer.Resize(fyne.NewSize(searchEntry.Size().Width, suggestionsBox.MinSize().Height))
 			showSuggestions(true)
@@ -155,6 +156,7 @@ func ShowHomePage(A fyne.App) {
 		// Display the suggestions list in a popup
 		//showSuggestionsPopup(suggestionsList, searchEntry)
 	}
+
 	W.SetOnClosed(func() {
 		A.Quit()
 	})
@@ -164,45 +166,84 @@ func ShowHomePage(A fyne.App) {
 }
 
 // updateArtistGrid refreshes the artist grid with new data.
-func updateArtistGrid(artists []Artist) {
+func updateArtistGrid(artists []Artist, W fyne.Window) {
 	artistGrid.Objects = nil // Effacer la grille existante
 	for _, artist := range artists {
-		artistGrid.Add(createArtistCard(artist))
+		artistGrid.Add(createArtistCard(artist, W))
 	}
 	artistGrid.Refresh() //Refresh the grid with update artistes
 }
 
 // createArtistGrid initializes and returns a grid layout containing artist cards.
-func createArtistGrid() *fyne.Container {
+func createArtistGrid(W fyne.Window) *fyne.Container {
 	artistsData := GetArtists()
 	grid := container.NewGridWithColumns(4) // Crée un grille avec 3 colonnes.
 
 	for _, artist := range artistsData {
-		artistCard := createArtistCard(artist) // Crée une carte pour chaque artiste.
-		grid.Add(artistCard)                   // Ajoute la carte à la grille.
+		artistCard := createArtistCard(artist, W) // Crée une carte pour chaque artiste.
+		grid.Add(artistCard)                      // Ajoute la carte à la grille.
 	}
 
 	return grid // Return  a grid layout with artists cards
 }
 
-// showArtistDetails displays a popup with detailed information about an artist.
-func showArtistDetails(artist Artist) {
+func ArtistsPage(artist Artist) {
+	W := A.NewWindow("Groupie Trackers")
+	homeButton := widget.NewButtonWithIcon("", theme.HomeIcon(), func() {
+		ShowHomePage(A)
+		W.Hide()
+	})
 	image := getImageFromURL(artist.Image)
-	widget.NewPopUp(
-		fyne.NewContainerWithLayout(layout.NewVBoxLayout(),
 
-			canvas.NewText(artist.Name, theme.PrimaryColor()),
-			widget.NewLabel(fmt.Sprintf("Listes des members: %s", strings.Join(artist.Members, ", "))),
-			widget.NewLabel(fmt.Sprintf("Date de publication du premier Album: %s", artist.FirstAlbum)),
-			widget.NewLabel(fmt.Sprintf("Date de creation : %d", artist.DateCreation)),
-			image,
+	content := container.NewVBox(
+		container.NewHBox(
+			homeButton,
+			layout.NewSpacer(),
 		),
-		W.Canvas(),
-	).Show()
+		container.NewHBox(
+			layout.NewSpacer(),
+			canvas.NewText(artist.Name, theme.PrimaryColor()),
+			layout.NewSpacer(),
+		),
+
+		container.NewVBox(
+			container.NewHBox(
+				layout.NewSpacer(),
+				widget.NewLabel("Liste des membres:"),
+				layout.NewSpacer(),
+			),
+			container.NewHBox(
+				layout.NewSpacer(),
+				widget.NewLabel(strings.Join(artist.Members, ", ")),
+				layout.NewSpacer(),
+			),
+		),
+
+		container.NewHBox(
+			layout.NewSpacer(),
+			widget.NewLabel(fmt.Sprintf("Date de publication du premier Album: %s", artist.FirstAlbum)),
+			layout.NewSpacer(),
+		),
+		container.NewHBox(
+			layout.NewSpacer(),
+			widget.NewLabel(fmt.Sprintf("Date de création : %d", artist.DateCreation)),
+			layout.NewSpacer(),
+		),
+		image,
+	)
+
+	W.SetOnClosed(func() {
+		A.Quit()
+	})
+
+	W.SetContent(container.NewBorder(content, nil, nil, nil))
+	W.CenterOnScreen()
+	W.Resize(fyne.NewSize(1000, 600))
+	W.Show()
 }
 
 // createArtistCard creates a visual card representing an artist, for use in the grid.
-func createArtistCard(artist Artist) fyne.CanvasObject {
+func createArtistCard(artist Artist, W fyne.Window) fyne.CanvasObject {
 	// Create a  label with the artist name
 	nameLabel := widget.NewLabelWithStyle(artist.Name, fyne.TextAlignCenter, fyne.TextStyle{})
 	nameLabel.Wrapping = fyne.TextTruncate // Pour s'assurer que le texte ne dépasse pas la largeur de la carte.
@@ -210,7 +251,8 @@ func createArtistCard(artist Artist) fyne.CanvasObject {
 	image := getImageFromURL(artist.Image)
 	image.FillMode = canvas.ImageFillContain
 	viewDetailsButton := widget.NewButton(artist.Name, func() {
-		showArtistDetails(artist)
+		ArtistsPage(artist)
+		W.Hide()
 	})
 	artistCard := container.NewVBox(
 		image,

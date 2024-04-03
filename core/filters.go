@@ -1,34 +1,31 @@
 package core
 
 import (
-	"strconv"
-	"strings"
 	"fyne.io/fyne/v2/widget"
 )
 
-// FilterArtistsByFirstAlbum filtre les artistes par date de premier album
-func FilterArtistsByFirstAlbum(year int, artists []Artist) []Artist {
+// FilterArtistsByCreationDate filtre les artistes par date de premier album
+func FilterArtistsByCreationDate(startyear, endyear int, artists []Artist) []Artist {
 	filteredArtists := make([]Artist, 0)
 	for _, artist := range artists {
-		artistFirstAlbumYear, err := strconv.Atoi(strings.Split(artist.FirstAlbum, "-")[0])
-		if err != nil {
-			continue
-		}
-		if artistFirstAlbumYear == year {
+		if artist.DateCreation >= startyear && artist.DateCreation <= endyear {
 			filteredArtists = append(filteredArtists, artist)
 		}
 	}
+
 	return filteredArtists
 }
 
-
-//Filtre par membres
-func filterArtistsByMember(members string, artists []Artist) []Artist {
+// Fonction pour filtrer les artistes en fonction du nombre de membres sélectionnés
+func filterArtistsByNumMembers(artists []Artist, membersChecks []*widget.Check) []Artist {
 	filteredArtists := make([]Artist, 0)
+	checkedNumbers := getCheckedNumbers(membersChecks...)
+
 	for _, artist := range artists {
-		for _, member := range artist.Members {
-			if strings.Contains(strings.ToLower(member), strings.ToLower(members)) {
+		for _, nbr := range checkedNumbers {
+			if len(artist.Members) == nbr {
 				filteredArtists = append(filteredArtists, artist)
+				// Pas besoin de continuer la boucle intérieure une fois qu'un match est trouvé
 				break
 			}
 		}
@@ -36,14 +33,12 @@ func filterArtistsByMember(members string, artists []Artist) []Artist {
 	return filteredArtists
 }
 
-// Fonction pour filtrer les artistes en fonction du nombre de membres sélectionnés
-func filterArtistsByNumMembers(numMembers int, artists []Artist, membersChecks []*widget.Check) []Artist {
-    filteredArtists := make([]Artist, 0)
-    for _, artist := range artists {
-        if len(artist.Members) == numMembers {
-            filteredArtists = append(filteredArtists, artist)
-        }
-    }
-    return filteredArtists
+func getCheckedNumbers(checks ...*widget.Check) []int {
+	var checkedNumbers []int
+	for i, check := range checks {
+		if check.Checked {
+			checkedNumbers = append(checkedNumbers, i+1) // Ajouter 1 car les nombres de membres commencent à partir de 1
+		}
+	}
+	return checkedNumbers
 }
-
