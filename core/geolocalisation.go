@@ -1,47 +1,34 @@
 package core
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 )
 
-// Fonction pour afficher les données de géolocalisation à partir d'une API
-func ShowGeolocalisationFromAPI() {
-	// Appeler l'API pour récupérer les données de géolocalisation
-	// Code pour appeler l'API et obtenir les données de géolocalisation
+func main() {
 
-	// Supposons que les données de géolocalisation soient stockées dans une liste appelée locations
-	locations := []string{"North Carolina, USA", "Georgia, USA", "Los Angeles, USA", "Saitama, Japan", "Osaka, Japan", "Nagoya, Japan", "Penrose, New Zealand", "Dunedin, New Zealand"}
+	url := "https://api.geoapify.com/v1/geocode/search?text=38%20Upper%20Montagu%20Street%2C%20Westminster%20W1H%201LJ%2C%20United%20Kingdom&apiKey=78d974bfd32a4904b1fd69a4a9354b4e"
+	method := "GET"
 
-	// Créer une liste pour afficher les localisations
-	locationList := widget.NewList(
-		// Fonction pour obtenir le contenu de chaque élément de la liste
-		func() int {
-			return len(locations)
-		},
-		// Fonction pour créer chaque élément de la liste
-		func() fyne.CanvasObject {
-			return widget.NewLabel("")
-		},
-		// Fonction pour mettre à jour le contenu de chaque élément de la liste
-		func(i widget.ListItemID, obj fyne.CanvasObject) {
-			obj.(*widget.Label).SetText(locations[i])
-		},
-	)
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
 
-	// Créer le contenu principal de la page de géolocalisation
-	content := container.NewVBox(
-		widget.NewLabel("Locations:"),
-		locationList, // Ajouter la liste des localisations
-	)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer res.Body.Close()
 
-	// Créer une nouvelle fenêtre pour afficher les données de géolocalisation
-	geoWindow := a.NewWindow("Geolocalisation")
-	geoWindow.Resize(fyne.NewSize(400, 300))
-	geoWindow.SetContent(content)
-
-	// Afficher la fenêtre0
-
-	geoWindow.Show()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(body))
 }

@@ -15,7 +15,7 @@ func FilterPage() {
         ShowHomePage()
         W.Hide()
     })
-
+    
     // Fonction pour mettre à jour le Label avec l'année correspondant à la valeur du slider
     updateLabelYear := func(label *widget.Label, value float64) {
         year := int(value)
@@ -49,9 +49,10 @@ var membersChecks []*widget.Check
 // Boucle pour créer et initialiser les cases à cocher
 for i := 1; i <= 7; i++ {
     memberCheck := widget.NewCheck(strconv.Itoa(i), func(checked bool) {})
-    memberCheck.SetChecked(true) // Initialiser à true par défaut
+    memberCheck.SetChecked(false) // Initialiser à false pour qu'elles ne soient pas cochées par défaut
     membersChecks = append(membersChecks, memberCheck)
 }
+
 
 // Convertir membersChecks en []fyne.CanvasObject
 var canvasObjects []fyne.CanvasObject

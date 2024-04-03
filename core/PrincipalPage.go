@@ -2,8 +2,6 @@ package core
 
 import (
 	"fmt"
-	"strings"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -11,16 +9,21 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"strings"
 )
 
+// Global variables for the application and the main window.
 var (
 	a           = app.New()
 	W           = a.NewWindow("Groupie Tracker")
 	artistsData []Artist
+	artistGrid  *fyne.Container
 )
 
+// CreateMainMenu creates the main menu for the application.
 func CreateMainMenu() *fyne.MainMenu {
 	return fyne.NewMainMenu(
+		//File for a Quit option
 		fyne.NewMenu("File",
 			fyne.NewMenuItem("Quit", func() {
 				a.Quit()
@@ -40,51 +43,102 @@ func CreateMainMenu() *fyne.MainMenu {
 }
 
 func ShowHomePage() {
-	W := a.NewWindow("Groupie Trackers")
-
+	// Initialize search bar with a specific size
 	searchEntry := widget.NewEntry()
-	searchEntry.SetPlaceHolder("Search for artists...")
-	searchEntry.OnChanged = func(term string) {
-		results := Searchbar(term, artistsData)
-		updateArtistGrid(results)
-	}
+	searchEntry.SetPlaceHolder("Search...")
+
+	// Initialize search button
+	searchButton := widget.NewButton("Search", func() {
+		searchTerm := searchEntry.Text
+		results := Searchbar(searchTerm, artistsData)
+		updateArtistGrid(results) // Update the artist grid with found artists
+	})
+
+	// Initialize filter button
 	
-	//Ajouter par Awa
 	filterButton := widget.NewButton("Recherche avec Filtre", func() {
 		FilterPage()
 		W.Close()
 	})
 
-	artistGrid = createArtistGrid()
-	artistsData = GetArtists()
 
-	// Créer le contenu principal de la page
-	content := container.NewVBox(
-		createToolbar(),
-		filterButton,
+	// Container for the search bar without unnecessary spacing
+	searchContainer := container.New(layout.NewHBoxLayout(),
 		layout.NewSpacer(),
-		searchEntry, // Ajout DE la barre de recherche
-		artistGrid,  // la grille des artistes
+		container.New(layout.NewVBoxLayout(),
+			searchEntry,
+			layout.NewSpacer(), // Add some space between search entry and buttons
+			container.New(layout.NewHBoxLayout(),
+				layout.NewSpacer(), // Add some space before search button
+				searchButton,
+				layout.NewSpacer(), // Add some space between search and filter buttons
+				filterButton,
+				layout.NewSpacer(), // Add some space after filter button
+			),
+			layout.NewSpacer(), // Add some space at the bottom of the container
+		),
+		layout.NewSpacer(),
 	)
 
-	// Créer un conteneur avec défilement pour le contenu principal
-	scrollContainer := container.NewVScroll(content)
+	// Create the artist grid and set up the home page content
+	artistsData = GetArtists()
+	artistGrid = createArtistGrid()
+	mainContent := container.NewVBox(searchContainer, artistGrid)
 
+	// Create the main navigation toolbar
+	toolbar := createToolbar()
+
+	// Set up the main content of the home page
+	content := container.NewBorder(toolbar, nil, nil, nil, mainContent)
+
+	// Add a scroll bar if necessary
+	scrollContainer := container.NewVScroll(content)
 	W.SetContent(scrollContainer)
-	W.CenterOnScreen()
-	W.Resize(fyne.NewSize(1000, 600))
+
+	// Manage suggestions for the search bar
+	searchEntry.OnChanged = func(input string) {
+		if input == "" {
+			return // Do nothing if the search bar is empty
+		}
+
+		// Generate suggestions based on input
+		suggestions := generateSuggestions(input, artistsData)
+
+		if len(suggestions) > 0 {
+			// Create the suggestions list
+			suggestionsList := widget.NewList(
+				func() int { return len(suggestions) },
+				func() fyne.CanvasObject { return widget.NewLabel("") },
+				func(id widget.ListItemID, object fyne.CanvasObject) {
+					object.(*widget.Label).SetText(suggestions[id].Name)
+				},
+			)
+
+			suggestionsList.OnSelected = func(id widget.ListItemID) {
+				searchEntry.SetText(suggestions[id].Name)
+			}
+
+			// Display the suggestions list in a popup
+			showSuggestionsPopup(suggestionsList, searchEntry)
+		}
+	}
+
 	W.Show()
 }
 
+
+// updateArtistGrid refreshes the artist grid with new data.
 func updateArtistGrid(artists []Artist) {
 	artistGrid.Objects = nil // Effacer la grille existante
 	for _, artist := range artists {
 		artistGrid.Add(createArtistCard(artist))
 	}
-	artistGrid.Refresh() // Rafraîchir la grille pour afficher les modifications
+	artistGrid.Refresh() //Refresh the grid with update artistes
 }
 
+// createToolbar generates a toolbar for navigation within the app.
 func createToolbar() *widget.Toolbar {
+	// Returns a toolbar widget with predefined actions, e.g., returning to home page.
 	return widget.NewToolbar(
 		widget.NewToolbarAction(theme.HomeIcon(), func() {
 			ShowHomePage()
@@ -92,58 +146,57 @@ func createToolbar() *widget.Toolbar {
 	)
 }
 
-var artistGrid *fyne.Container
-
+// createArtistGrid initializes and returns a grid layout containing artist cards.
 func createArtistGrid() *fyne.Container {
 	artistsData := GetArtists()
-
-	numColumns := 1
-
-	grid := container.NewGridWithColumns(numColumns)
+	grid := container.NewGridWithColumns(4) // Crée un grille avec 3 colonnes.
 
 	for _, artist := range artistsData {
-		artistLabel := widget.NewLabel(artist.Name)
-
-		grid.Add(artistLabel)
+		artistCard := createArtistCard(artist) // Crée une carte pour chaque artiste.
+		grid.Add(artistCard)                   // Ajoute la carte à la grille.
 	}
 
-	// Retourner la grille contenant les artistes
-	return grid
-}
-func createArtistCard(artist Artist) fyne.CanvasObject {
-	// image := canvas.NewImageFromFile(artist.Image)
-	// image.FillMode = canvas.ImageFillContain
-
-	nameLabel := widget.NewLabel(artist.Name)
-	membersLabel := widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", ")))
-	firstAlbumLabel := widget.NewLabel(fmt.Sprintf("First Album: %s", artist.FirstAlbum))
-	creationDateLabel := widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation))
-
-	return container.NewVBox(
-		// image,
-		nameLabel,
-		membersLabel,
-		firstAlbumLabel,
-		creationDateLabel,
-		widget.NewButton("View Details", func() {
-			showArtistDetails(artist)
-		}),
-	)
+	return grid // Return  a grid layout with artists cards
 }
 
-func searchArtists(term string) []Artist {
-	return Searchbar(term, artistsData)
-}
-
+// showArtistDetails displays a popup with detailed information about an artist.
 func showArtistDetails(artist Artist) {
-	widget.NewModalPopUp(
+	image := getImageFromURL(artist.Image)
+	widget.NewPopUp(
 		fyne.NewContainerWithLayout(layout.NewVBoxLayout(),
+
 			canvas.NewText(artist.Name, theme.PrimaryColor()),
-			// canvas.NewImageFromFile(artist.Image),
 			widget.NewLabel(fmt.Sprintf("Members: %s", strings.Join(artist.Members, ", "))),
 			widget.NewLabel(fmt.Sprintf("First Album: %s", artist.FirstAlbum)),
 			widget.NewLabel(fmt.Sprintf("Creation Date: %d", artist.DateCreation)),
+			image,
 		),
 		W.Canvas(),
 	).Show()
+}
+
+// createArtistCard creates a visual card representing an artist, for use in the grid.
+func createArtistCard(artist Artist) fyne.CanvasObject {
+	// Create a  label with the artist name
+	nameLabel := widget.NewLabelWithStyle(artist.Name, fyne.TextAlignCenter, fyne.TextStyle{})
+	nameLabel.Wrapping = fyne.TextTruncate // Pour s'assurer que le texte ne dépasse pas la largeur de la carte.
+
+	image := getImageFromURL(artist.Image)
+	image.FillMode = canvas.ImageFillContain
+	viewDetailsButton := widget.NewButton(artist.Name, func() {
+		showArtistDetails(artist)
+	})
+	artistCard := container.NewVBox(
+		nameLabel,
+		image,
+		viewDetailsButton,
+	)
+	artistCard = container.NewPadded(artistCard)
+	// Returns a container with artist's name, image,...
+	return artistCard
+}
+
+func showSuggestionsPopup(suggestionsList *widget.List, entry *widget.Entry) {
+    popup := widget.NewModalPopUp(suggestionsList, W.Canvas())
+    popup.Show()
 }
